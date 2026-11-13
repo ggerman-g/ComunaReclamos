@@ -1,0 +1,27 @@
+@page
+@model ComunaReclamos.Web.Pages.Admin.LoginModel
+@{
+    ViewData["Title"] = "Acceso del personal";
+}
+
+<div class="admin-auth-page">
+    <div class="admin-auth-card">
+        <a asp-page="/Index" class="admin-back-link">← Volver al sitio</a>
+        <h1>Panel de la comuna</h1>
+        <p>Ingresá con la cuenta del personal autorizado.</p>
+
+        @if (!string.IsNullOrEmpty(Model.Error))
+        {
+            <div class="admin-alert" role="alert">@Model.Error</div>
+        }
+
+        <form method="post">
+            <input type="hidden" asp-for="ReturnUrl" />
+            <label asp-for="Usuario">Usuario</label>
+            <input asp-for="Usuario" autocomplete="username" required />
+            <label asp-for="Contrasena">Contraseña</label>
+            <input asp-for="Contrasena" type="password" autocomplete="current-password" required />
+            <button type="submit" class="admin-primary-button">Ingresar</button>
+        </form>
+    </div>
+</div>

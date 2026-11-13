@@ -1,0 +1,198 @@
+﻿@page
+@model ComunaReclamos.Web.Pages.Reclamos.CrearModel
+@{
+    ViewData["Title"] = "Nuevo reclamo";
+}
+
+<div class="claim-page">
+    <header class="claim-header">
+        <a class="claim-back" asp-page="/Index" aria-label="Volver al inicio">←</a>
+        <div>
+            <h1>Nuevo reclamo</h1>
+            <p>Comuna Rural Delfín Gallo</p>
+        </div>
+    </header>
+
+    <div class="claim-content">
+        @if (!string.IsNullOrEmpty(Model.CodigoGenerado))
+        {
+            <div class="claim-success" role="status">
+                <strong>¡Reclamo enviado!</strong>
+                <span>Guardá tu código para consultar el estado:</span>
+                <b>@Model.CodigoGenerado</b>
+            </div>
+        }
+
+        <form method="post" enctype="multipart/form-data" id="claim-form">
+            <div asp-validation-summary="ModelOnly" class="claim-validation" role="alert"></div>
+
+            <section class="claim-section">
+                <label class="claim-label">Tipo de problema <span class="required">*</span></label>
+                <div class="category-options">
+                    @foreach (var categoria in Model.CategoriasLista)
+                    {
+                        <label class="category-option">
+                            <input asp-for="Reclamo.CategoriaReclamoId" type="radio" value="@categoria.Value" required />
+                            <span>@categoria.Text</span>
+                        </label>
+                    }
+                </div>
+                <span asp-validation-for="Reclamo.CategoriaReclamoId" class="field-validation"></span>
+            </section>
+
+            <section class="claim-section location-section">
+                <label class="claim-label">Ubicación <span class="required">*</span></label>
+                <div class="map-preview" aria-label="Vista de ubicación del reclamo">
+                    <span class="map-pin" aria-hidden="true"></span>
+                </div>
+                <input asp-for="Reclamo.Latitud" type="hidden" />
+                <input asp-for="Reclamo.Longitud" type="hidden" />
+                <div class="location-actions">
+                    <button class="secondary-action" type="button" id="use-location">Usar mi ubicación</button>
+                    <button class="secondary-action" type="button" id="choose-map">Elegir en el mapa</button>
+                </div>
+                <p class="location-message" id="location-message" aria-live="polite"></p>
+                <input asp-for="Reclamo.Direccion" class="claim-input" placeholder="Calle y número, o esquina" aria-label="Calle y número, o esquina" required />
+                <span asp-validation-for="Reclamo.Direccion" class="field-validation"></span>
+                <input asp-for="Reclamo.Barrio" class="claim-input" placeholder="Barrio o referencia" aria-label="Barrio o referencia" />
+            </section>
+
+            <section class="claim-section">
+                <label asp-for="Reclamo.Descripcion" class="claim-label">Indicaciones <span class="required">*</span></label>
+                <textarea asp-for="Reclamo.Descripcion" class="claim-input claim-textarea" placeholder="Contá qué pasa y cómo llegar. (mínimo 10 caracteres)" required></textarea>
+                <span asp-validation-for="Reclamo.Descripcion" class="field-validation"></span>
+                <small class="char-count"><span id="desc-count">0</span>/2000</small>
+            </section>
+
+            <section class="claim-section photo-section">
+                <label class="claim-label">Foto del problema (hasta 3)</label>
+                <div class="photo-actions">
+                    <label class="photo-action">
+                        Cámara
+                        <input type="file" name="FotosAdjuntas" accept="image/*" capture="environment" data-photo-input />
+                    </label>
+                    <label class="photo-action">
+                        Galería
+                        <input type="file" name="FotosAdjuntas" accept="image/*" multiple data-photo-input />
+                    </label>
+                    <label class="photo-action">
+                        + Otra
+                        <input type="file" name="FotosAdjuntas" accept="image/*" data-photo-input />
+                    </label>
+                </div>
+                <p class="photo-message" id="photo-message" aria-live="polite">Podés adjuntar hasta 3 fotos.</p>
+                <span asp-validation-for="FotosAdjuntas" class="field-validation"></span>
+            </section>
+
+            <div class="claim-contact-fields">
+                <div>
+                    <input asp-for="Reclamo.NombreVecino" class="claim-input" placeholder="Tu nombre" aria-label="Tu nombre" required />
+                    <span asp-validation-for="Reclamo.NombreVecino" class="field-validation"></span>
+                </div>
+                <div>
+                    <input asp-for="Reclamo.TelefonoContacto" class="claim-input" placeholder="Teléfono (ej: 223-1234567)" aria-label="Teléfono" type="tel" required />
+                    <span asp-validation-for="Reclamo.TelefonoContacto" class="field-validation"></span>
+                    <small class="help-text">Formato: 223-1234567 o 2231234567</small>
+                </div>
+            </div>
+
+            <button type="submit" class="claim-submit">Enviar reclamo</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const locationMessage = document.getElementById("location-message");
+        const claimForm = document.getElementById("claim-form");
+        const latitudeInput = document.getElementById("Reclamo_Latitud");
+        const longitudeInput = document.getElementById("Reclamo_Longitud");
+        const descripcionInput = document.getElementById("Reclamo_Descripcion");
+        const telefonoInput = document.getElementById("Reclamo_TelefonoContacto");
+
+        // Contador de caracteres
+        if (descripcionInput) {
+            const charCount = document.getElementById("desc-count");
+            descripcionInput.addEventListener("input", () => {
+                charCount.textContent = descripcionInput.value.length;
+            });
+        }
+
+        // Validación de teléfono en tiempo real
+        if (telefonoInput) {
+            telefonoInput.addEventListener("input", (e) => {
+                let value = e.target.value.replace(/\D/g, '');
+                if (value.length > 10) {
+                    value = value.substring(0, 10);
+                }
+                if (value.length > 3 && value.length < 10) {
+                    e.target.value = value.substring(0, 3) + '-' + value.substring(3);
+                } else {
+                    e.target.value = value;
+                }
+            });
+        }
+
+        document.getElementById("use-location").addEventListener("click", () => {
+            if (!navigator.geolocation) {
+                locationMessage.textContent = "Tu navegador no permite obtener la ubicación.";
+                return;
+            }
+
+            locationMessage.textContent = "Buscando tu ubicación…";
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    latitudeInput.value = position.coords.latitude;
+                    longitudeInput.value = position.coords.longitude;
+                    locationMessage.textContent = "Ubicación agregada al reclamo.";
+                },
+                () => {
+                    locationMessage.textContent = "No pudimos obtener tu ubicación. Revisá los permisos del navegador.";
+                },
+                { enableHighAccuracy: true, timeout: 10000 }
+            );
+        });
+
+        document.getElementById("choose-map").addEventListener("click", () => {
+            locationMessage.textContent = "Indicá la dirección o usá tu ubicación para compartir el punto exacto.";
+            document.getElementById("Reclamo_Direccion").focus();
+        });
+
+        const photoInputs = [...document.querySelectorAll("[data-photo-input]")];
+        const photoMessage = document.getElementById("photo-message");
+        photoInputs.forEach((input) => {
+            input.addEventListener("change", () => {
+                const selectedFiles = photoInputs.flatMap((photoInput) => [...photoInput.files]);
+                if (selectedFiles.length > 3) {
+                    input.value = "";
+                    photoMessage.textContent = "El máximo es de 3 fotos. Elegí menos archivos.";
+                    return;
+                }
+
+                // Validar tamaño de fotos
+                let totalSize = 0;
+                for (let file of selectedFiles) {
+                    totalSize += file.size;
+                    if (file.size > 5 * 1024 * 1024) {
+                        input.value = "";
+                        photoMessage.textContent = `La foto '${file.name}' es muy grande. Máximo 5MB por foto.`;
+                        return;
+                    }
+                }
+
+                photoMessage.textContent = selectedFiles.length === 0
+                    ? "Podés adjuntar hasta 3 fotos."
+                    : `${selectedFiles.length} de 3 fotos seleccionadas.`;
+            });
+        });
+
+        claimForm.addEventListener("submit", (event) => {
+            const selectedCount = photoInputs.reduce((count, input) => count + input.files.length, 0);
+            if (selectedCount > 3) {
+                event.preventDefault();
+                photoMessage.textContent = "El máximo es de 3 fotos.";
+            }
+        });
+    </script>
+}

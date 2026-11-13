@@ -1,0 +1,78 @@
+@page
+@model ComunaReclamos.Web.Pages.Reclamos.ConfirmacionModel
+@{
+    ViewData["Title"] = "Reclamo recibido";
+}
+
+<div class="confirmation-page">
+    <header class="confirmation-header">
+        <div class="logo" aria-hidden="true"></div>
+        <div><strong>Comuna Rural Delfín Gallo</strong><span>Reclamos vecinales</span></div>
+    </header>
+    <main class="confirmation-content">
+        <div class="confirmation-check" aria-hidden="true">✓</div>
+        <h1>¡Reclamo enviado con éxito!</h1>
+        <div class="confirmation-success-message" role="status">
+            <p>Gracias por informar sobre este problema. Hemos recibido tu reclamo y lo estamos revisando.</p>
+            <p><strong>Guardá tu número de seguimiento para consultar el estado en cualquier momento.</strong></p>
+        </div>
+
+        <div class="confirmation-code-container">
+            <span class="confirmation-code-label">Tu número de seguimiento es:</span>
+            <div class="confirmation-code">
+                <strong>@Model.Reclamo.CodigoSeguimiento</strong>
+            </div>
+            <button type="button" class="copy-button" onclick="copiarAlPortapapeles('@Model.Reclamo.CodigoSeguimiento')">Copiar</button>
+        </div>
+
+        <div class="confirmation-info">
+            <h2>Datos de tu reclamo:</h2>
+            <div class="info-item">
+                <span class="info-label">Tipo:</span>
+                <span class="info-value">@Model.Reclamo.CategoriaReclamo?.Nombre</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Ubicación:</span>
+                <span class="info-value">@Model.Reclamo.Direccion @(!string.IsNullOrWhiteSpace(Model.Reclamo.Barrio) ? " · " + Model.Reclamo.Barrio : "")</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Estado actual:</span>
+                <span class="info-value status-badge">@Model.Reclamo.Estado</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">Fecha:</span>
+                <span class="info-value">@Model.Reclamo.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</span>
+            </div>
+        </div>
+
+        <div class="confirmation-states">
+            <h2>Estados del reclamo:</h2>
+            <ol class="confirmation-progress">
+                @foreach (var estado in new[] { "Recibido", "En revisión", "En curso", "Resuelto" })
+                {
+                    <li class="@(Model.EstadoAlcanzado(estado) ? "reached" : "")">@estado</li>
+                }
+            </ol>
+        </div>
+
+        <div class="confirmation-actions">
+            <a class="confirmation-share" asp-page="/Reclamos/Seguir" asp-route-codigo="@Model.Reclamo.CodigoSeguimiento">Ver seguimiento completo</a>
+            <a class="confirmation-home" asp-page="/Index">Volver al inicio</a>
+        </div>
+    </main>
+</div>
+
+<script>
+    function copiarAlPortapapeles(texto) {
+        navigator.clipboard.writeText(texto).then(() => {
+            const btn = event.target;
+            const textOriginal = btn.textContent;
+            btn.textContent = '¡Copiado!';
+            setTimeout(() => {
+                btn.textContent = textOriginal;
+            }, 2000);
+        }).catch(err => {
+            alert('Error al copiar: ' + err);
+        });
+    }
+</script>

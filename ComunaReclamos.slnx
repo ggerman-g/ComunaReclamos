@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="ComunaReclamos.Data/ComunaReclamos.Data.csproj" />
+  <Project Path="ComunaReclamos.Web/ComunaReclamos.Web.csproj" />
+</Solution>

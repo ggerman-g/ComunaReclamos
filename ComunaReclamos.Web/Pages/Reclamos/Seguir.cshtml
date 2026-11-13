@@ -1,0 +1,68 @@
+@page
+@model ComunaReclamos.Web.Pages.Reclamos.SeguirModel
+@{
+    ViewData["Title"] = "Seguir mi reclamo";
+}
+
+<div class="public-status-page">
+    <header class="public-status-header">
+        <a asp-page="/Index" aria-label="Volver al inicio">←</a>
+        <div><strong>Comuna Rural Delfín Gallo</strong><span>Seguimiento de reclamos</span></div>
+    </header>
+    <main class="public-status-content">
+        <h1>Seguir mi reclamo</h1>
+        <form method="get" class="status-search-form">
+            <label for="codigo">Número de seguimiento</label>
+            <div><input id="codigo" name="codigo" value="@Model.Codigo" placeholder="Ej: RV-00481" required /><button type="submit">Buscar</button></div>
+        </form>
+
+        @if (!string.IsNullOrWhiteSpace(Model.Mensaje))
+        {
+            <p class="public-status-message" role="status">@Model.Mensaje</p>
+        }
+        @if (Model.Reclamo is not null)
+        {
+            <section class="public-status-card">
+                <div class="status-header">
+                    <p class="status-code">Código: <strong>@Model.Reclamo.CodigoSeguimiento</strong></p>
+                    <p class="status-state status-state-@Model.Reclamo.Estado.Replace(" ", "-").ToLower()">
+                        <span class="status-label">Estado actual:</span>
+                        <strong>@Model.Reclamo.Estado</strong>
+                    </p>
+                </div>
+                <div class="status-info">
+                    <p><strong>@Model.Reclamo.CategoriaReclamo.Nombre</strong></p>
+                    <p>📍 @Model.Reclamo.Direccion @(!string.IsNullOrWhiteSpace(Model.Reclamo.Barrio) ? " · " + Model.Reclamo.Barrio : "")</p>
+                    <p>📅 Creado: @Model.Reclamo.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</p>
+                </div>
+
+                @if (Model.Reclamo.Historial.Count > 0)
+                {
+                    <div class="public-history">
+                        <h2>📋 Actualizaciones de la comuna</h2>
+                        @foreach (var evento in Model.Reclamo.Historial.OrderByDescending(item => item.FechaCambio))
+                        {
+                            <div class="public-history-item">
+                                <div class="history-state">@evento.EstadoNuevo</div>
+                                <div class="history-info">
+                                    <span class="history-date">@evento.FechaCambio.ToString("dd/MM/yyyy HH:mm")</span>
+                                    @if (!string.IsNullOrWhiteSpace(evento.ComentarioVecino))
+                                    {
+                                        <p class="history-comment">@evento.ComentarioVecino</p>
+                                    }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="public-history">
+                        <p class="no-history">Tu reclamo ha sido recibido. Pronto recibirás actualizaciones.</p>
+                    </div>
+                }
+            </section>
+        }
+        <a class="public-home-link" asp-page="/Index">Volver al inicio</a>
+    </main>
+</div>

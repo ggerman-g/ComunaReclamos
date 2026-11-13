@@ -1,0 +1,44 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Reclamos vecinales";
+}
+
+<div class="page-home">
+    <div class="brand-card">
+        <div class="brand-header">
+            <div class="logo" aria-hidden="true"></div>
+            <div class="brand-copy">
+                <h1>Comuna Rural Delfín Gallo</h1>
+                <h2>Reclamos vecinales</h2>
+            </div>
+        </div>
+    </div>
+
+    <section class="hero-copy">
+        <h3>¿Qué problema viste en tu barrio?</h3>
+        <p>Contanos y la comuna lo va a revisar.</p>
+    </section>
+
+    <a class="primary-action" asp-page="/Reclamos/Crear">Hacer un reclamo</a>
+
+    <section class="common-issues">
+        <h4>Reclamos más frecuentes</h4>
+        <div class="button-grid">
+            <a class="issue-pill" asp-page="/Reclamos/Crear" asp-route-categoria="Alumbrado">Alumbrado</a>
+            <a class="issue-pill" asp-page="/Reclamos/Crear" asp-route-categoria="Calles y baches">Calles y baches</a>
+            <a class="issue-pill" asp-page="/Reclamos/Crear" asp-route-categoria="Basura">Basura</a>
+            <a class="issue-pill" asp-page="/Reclamos/Crear" asp-route-categoria="Agua y cloacas">Agua y cloacas</a>
+        </div>
+    </section>
+
+    <section class="tracking">
+        <h4>Seguir mi reclamo</h4>
+        <form class="tracking-form" method="get" action="/Reclamos/Seguir">
+            <input type="text" name="codigo" placeholder="Ej: RV-00481" aria-label="Código de reclamo" required />
+            <button type="submit">Buscar</button>
+        </form>
+    </section>
+
+    <div class="page-footer">Cruz Alta · Tucumán <a class="admin-entry-link" asp-page="/Admin/Login">Acceso comuna</a></div>
+</div>

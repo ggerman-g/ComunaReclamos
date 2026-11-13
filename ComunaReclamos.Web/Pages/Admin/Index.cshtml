@@ -1,0 +1,128 @@
+@page
+@model ComunaReclamos.Web.Pages.Admin.IndexModel
+@{
+    ViewData["Title"] = "Panel de reclamos";
+}
+
+<div class="admin-page">
+    <header class="admin-header">
+        <div class="admin-emblem" aria-hidden="true">DRG</div>
+        <div class="admin-brand">
+            <h1>Panel de la comuna · Reclamos</h1>
+            <p>Solo para personal autorizado</p>
+        </div>
+        <form method="post" asp-page-handler="Salir" class="admin-logout-form">
+            <button type="submit" class="admin-logout">Salir</button>
+        </form>
+    </header>
+
+    <main class="admin-dashboard">
+        @if (!string.IsNullOrWhiteSpace(Model.Mensaje))
+        {
+            <div class="admin-notice" role="status">@Model.Mensaje</div>
+        }
+
+        <section class="admin-summary" aria-label="Resumen de reclamos">
+            <div><span>Nuevos</span><strong>@Model.Nuevos</strong></div>
+            <div><span>En curso</span><strong>@Model.EnCurso</strong></div>
+            <div><span>Resueltos este mes</span><strong>@Model.ResueltosMes</strong></div>
+        </section>
+
+        <nav class="admin-filters" aria-label="Filtrar reclamos">
+            <a class="@(Model.EstadoFiltro == null ? "selected" : "")" asp-page="/Admin/Index">Todos</a>
+            <a class="@(Model.EstadoFiltro == "Recibido" ? "selected" : "")" asp-page="/Admin/Index" asp-route-estado="Recibido">Nuevos</a>
+            <a class="@(Model.EstadoFiltro == "En curso" ? "selected" : "")" asp-page="/Admin/Index" asp-route-estado="En curso">En curso</a>
+            <a class="@(Model.EstadoFiltro == "Resuelto" ? "selected" : "")" asp-page="/Admin/Index" asp-route-estado="Resuelto">Resueltos</a>
+        </nav>
+
+        <div class="admin-columns">
+            <section class="admin-list" aria-label="Listado de reclamos">
+                @if (Model.Reclamos.Count == 0)
+                {
+                    <p class="admin-empty">No hay reclamos en esta categoría.</p>
+                }
+                @foreach (var reclamo in Model.Reclamos)
+                {
+                    <a class="admin-claim-row @(Model.Seleccionado?.Id == reclamo.Id ? "active" : "")" asp-page="/Admin/Index" asp-route-id="@reclamo.Id" asp-route-estado="@Model.EstadoFiltro">
+                        <span class="admin-claim-main">
+                            <strong>@reclamo.CodigoSeguimiento</strong>
+                            <span>@reclamo.CategoriaReclamo.Nombre · @reclamo.Direccion</span>
+                        </span>
+                        <span class="admin-status">@reclamo.Estado</span>
+                    </a>
+                }
+            </section>
+
+            @if (Model.Seleccionado is not null)
+            {
+                <section class="admin-detail">
+                    <div class="admin-detail-heading">
+                        <div>
+                            <h2>@Model.Seleccionado.CodigoSeguimiento</h2>
+                            <p>@Model.Seleccionado.CategoriaReclamo.Nombre · @Model.Seleccionado.FechaCreacion.ToString("dd/MM/yyyy HH:mm")</p>
+                        </div>
+                        <span class="admin-status">@Model.Seleccionado.Estado</span>
+                    </div>
+
+                    <dl class="admin-facts">
+                        <div><dt>Ubicación</dt><dd>@Model.Seleccionado.Direccion@if (!string.IsNullOrWhiteSpace(Model.Seleccionado.Barrio)) { <text> · @Model.Seleccionado.Barrio</text> }</dd></div>
+                        <div><dt>Vecino</dt><dd>@(Model.Seleccionado.OcultarNombre ? "Nombre reservado" : Model.Seleccionado.NombreVecino) · @Model.Seleccionado.TelefonoContacto</dd></div>
+                    </dl>
+
+                    <p class="admin-description">“@Model.Seleccionado.Descripcion”</p>
+
+                    @if (Model.Seleccionado.Fotos.Count > 0)
+                    {
+                        <div class="admin-photos">
+                            @foreach (var foto in Model.Seleccionado.Fotos)
+                            {
+                                <a href="@foto.RutaArchivo" target="_blank" rel="noopener noreferrer"><img src="@foto.RutaArchivo" alt="Foto adjunta al reclamo @Model.Seleccionado.CodigoSeguimiento" /></a>
+                            }
+                        </div>
+                    }
+
+                    <form method="post" asp-page-handler="Actualizar" class="admin-edit-form">
+                        <input type="hidden" name="reclamoId" value="@Model.Seleccionado.Id" />
+                        <input type="hidden" name="estadoFiltro" value="@Model.EstadoFiltro" />
+
+                        <label for="estado">Estado</label>
+                        <select id="estado" name="estado">
+                            @foreach (var estado in new[] { "Recibido", "En revisión", "En curso", "Resuelto", "Rechazado" })
+                            {
+                                <option value="@estado" selected="@(Model.Seleccionado.Estado == estado)">@estado</option>
+                            }
+                        </select>
+
+                        <label for="cuadrillaId">Asignar a</label>
+                        <select id="cuadrillaId" name="cuadrillaId">
+                            <option value="">Sin asignar</option>
+                            @foreach (var cuadrilla in Model.Cuadrillas)
+                            {
+                                <option value="@cuadrilla.Id" selected="@(Model.Seleccionado.CuadrillaId == cuadrilla.Id)">@cuadrilla.Nombre</option>
+                            }
+                        </select>
+
+                        <label for="comentarioVecino">Actualización para el vecino</label>
+                        <textarea id="comentarioVecino" name="comentarioVecino" maxlength="500" placeholder="Al marcar como resuelto, contale qué solución se realizó."></textarea>
+
+                        <label for="notaInterna">Nota interna</label>
+                        <textarea id="notaInterna" name="notaInterna" maxlength="1000" placeholder="Solo visible para el personal">@Model.Seleccionado.NotaInterna</textarea>
+
+                        <button type="submit" class="admin-primary-button">Guardar actualización</button>
+                    </form>
+
+                    @if (Model.Seleccionado.Historial.Count > 0)
+                    {
+                        <section class="admin-history">
+                            <h3>Historial visible</h3>
+                            @foreach (var evento in Model.Seleccionado.Historial.OrderByDescending(item => item.FechaCambio))
+                            {
+                                <p><strong>@evento.EstadoNuevo</strong> · @evento.FechaCambio.ToString("dd/MM/yyyy HH:mm")<br />@evento.ComentarioVecino</p>
+                            }
+                        </section>
+                    }
+                </section>
+            }
+        </div>
+    </main>
+</div>
